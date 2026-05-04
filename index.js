@@ -2,7 +2,7 @@
 
 const https = require('https');
 
-// Get username from CLI
+
 function getUsername() {
     const username = process.argv[2];
 
@@ -14,7 +14,7 @@ function getUsername() {
     return username;
 }
 
-// Fetch GitHub activity
+
 function fetchGitHubActivity(username) {
     const options = {
         hostname: 'api.github.com',
@@ -91,7 +91,7 @@ function fetchGitHubActivity(username) {
     });
 }
 
-// Main function
+
 function main() {
     const username = getUsername();
     console.log(`Fetching activity for ${username}...`);
