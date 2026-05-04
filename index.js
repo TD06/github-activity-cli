@@ -2,7 +2,7 @@
 
 const https = require('https');
 
-
+// Get username from CLI
 function getUsername() {
     const username = process.argv[2];
 
@@ -14,7 +14,7 @@ function getUsername() {
     return username;
 }
 
-
+// Fetch GitHub activity
 function fetchGitHubActivity(username) {
     const options = {
         hostname: 'api.github.com',
@@ -52,36 +52,53 @@ function fetchGitHubActivity(username) {
 
             console.log("\nRecent Activity:\n");
 
-            const seen = new Set();
+            const seenTypes = new Set();
             let count = 0;
 
             for (let event of events) {
                 if (count >= 5) break;
 
-                if (event.type === "PushEvent") {
-                    if (seen.has(event.repo.name)) continue;
-
-                    seen.add(event.repo.name);
+                // Push
+                if (event.type === "PushEvent" && !seenTypes.has("PushEvent")) {
                     console.log(`- Pushed commits to ${event.repo.name}`);
+                    seenTypes.add("PushEvent");
                     count++;
-                } 
-                
-                else if (event.type === "WatchEvent") {
-                    if (seen.has(event.repo.name)) continue;
+                }
 
-                    seen.add(event.repo.name);
+                // Star
+                else if (event.type === "WatchEvent" && !seenTypes.has("WatchEvent")) {
                     console.log(`- Starred ${event.repo.name}`);
+                    seenTypes.add("WatchEvent");
                     count++;
-                } 
-                
-                else if (event.type === "IssuesEvent") {
-                    if (event.payload.action === "opened") {
-                        if (seen.has(event.repo.name)) continue;
+                }
 
-                        seen.add(event.repo.name);
-                        console.log(`- Opened a new issue in ${event.repo.name}`);
-                        count++;
-                    }
+                // Issue
+                else if (
+                    event.type === "IssuesEvent" &&
+                    event.payload.action === "opened" &&
+                    !seenTypes.has("IssuesEvent")
+                ) {
+                    console.log(`- Opened a new issue in ${event.repo.name}`);
+                    seenTypes.add("IssuesEvent");
+                    count++;
+                }
+
+                // Pull Request
+                else if (
+                    event.type === "PullRequestEvent" &&
+                    event.payload.action === "opened" &&
+                    !seenTypes.has("PullRequestEvent")
+                ) {
+                    console.log(`- Opened a pull request in ${event.repo.name}`);
+                    seenTypes.add("PullRequestEvent");
+                    count++;
+                }
+
+                // Fork
+                else if (event.type === "ForkEvent" && !seenTypes.has("ForkEvent")) {
+                    console.log(`- Forked ${event.repo.name}`);
+                    seenTypes.add("ForkEvent");
+                    count++;
                 }
             }
         });
@@ -91,7 +108,7 @@ function fetchGitHubActivity(username) {
     });
 }
 
-
+// Main
 function main() {
     const username = getUsername();
     console.log(`Fetching activity for ${username}...`);
